@@ -1,69 +1,118 @@
-import React from "react";
-import { StyleSheet, Text, View, FlatList } from "react-native";
+import { ScrollView, StyleSheet, Text, View, StatusBar } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Bell } from 'lucide-react-native';
+import { colors, fontType } from './assets/theme';
+import ListBlog from './src/components/ListBlog';
+import { useFonts } from 'expo-font';
 
 export default function App() {
+  const [loaded] = useFonts(fontType);
 
-  const menuCamping = [
-    { id: "1", nama: "Tenda 4 Orang", harga: "Rp 50.000 / hari" },
-    { id: "2", nama: "Sleeping Bag", harga: "Rp 20.000 / hari" },
-    { id: "3", nama: "Kompor Portable", harga: "Rp 25.000 / hari" },
-    { id: "4", nama: "Carrier 60L", harga: "Rp 40.000 / hari" },
-    { id: "5", nama: "Matras Camping", harga: "Rp 15.000 / hari" },
-    { id: "6", nama: "Headlamp", harga: "Rp 10.000 / hari" },
-    { id: "7", nama: "Meja Lipat Camping", harga: "Rp 30.000 / hari" },
-  ];
-
-  const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <Text style={styles.nama}>{item.nama}</Text>
-      <Text style={styles.harga}>{item.harga}</Text>
-    </View>
-  );
+  if (!loaded) {
+    return null;
+  }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Rental Alat Camping</Text>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={colors.sand()} />
 
-      <FlatList
-        data={menuCamping}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-      />
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.title}>CampRent</Text>
+        <Bell color={colors.forestGreen()} size={24} />
+      </View>
 
-    </View>
+      {/* Kategori Alat Camping */}
+      <View style={styles.listCategory}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          
+          <View style={{ ...category.item, marginLeft: 24 }}>
+            <Text style={{ ...category.title, color: colors.forestGreen() }}>
+              Semua
+            </Text>
+          </View>
+
+          <View style={category.item}>
+            <Text style={category.title}>Tenda</Text>
+          </View>
+
+          <View style={category.item}>
+            <Text style={category.title}>Tas & Carrier</Text>
+          </View>
+
+          <View style={category.item}>
+            <Text style={category.title}>Peralatan Masak</Text>
+          </View>
+
+          <View style={category.item}>
+            <Text style={category.title}>Penerangan</Text>
+          </View>
+
+          <View style={category.item}>
+            <Text style={category.title}>Aksesoris</Text>
+          </View>
+
+          <View style={{ ...category.item, marginRight: 24 }}>
+            <Text style={category.title}>Paket Camping</Text>
+          </View>
+
+        </ScrollView>
+      </View>
+
+      {/* List Blog */}
+      <ListBlog styles={styles} />
+
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f2f2f2",
-    padding: 20,
-    marginTop: 40
+    backgroundColor: colors.sand(), // background alam (pasir)
+  },
+
+  header: {
+    paddingHorizontal: 24,
+    justifyContent: 'space-between',
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 52,
+    paddingTop: 8,
+    paddingBottom: 4,
+    backgroundColor: colors.sand(),
   },
 
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 20
+    fontSize: 20,
+    fontFamily: 'Pjs-ExtraBold',
+    color: colors.earthBrown(), // warna tanah
   },
 
-  card: {
-    backgroundColor: "white",
-    padding: 15,
-    marginBottom: 10,
-    borderRadius: 10,
-    elevation: 3
+  listCategory: {
+    paddingVertical: 10,
   },
 
-  nama: {
-    fontSize: 18,
-    fontWeight: "bold"
+  listBarang: {
+    paddingVertical: 10,
+    gap: 10,
+  },
+});
+
+const category = StyleSheet.create({
+  item: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 25,
+    alignItems: 'center',
+    backgroundColor: colors.olive(0.15), // hijau soft
+    marginHorizontal: 5,
   },
 
-  harga: {
-    fontSize: 16,
-    color: "green"
-  }
+  title: {
+    fontFamily: 'Pjs-SemiBold',
+    fontSize: 14,
+    lineHeight: 18,
+    color: colors.forestGreen(), // hijau utama
+  },
 });
