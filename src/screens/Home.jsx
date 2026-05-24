@@ -6,6 +6,9 @@ import {
   View,
   StatusBar,
   TouchableOpacity,
+  LayoutAnimation, 
+  Platform,        
+  UIManager
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -22,6 +25,10 @@ export default function Home({
   navigation
 }) {
   const [selectedCategory, setSelectedCategory] = useState("Semua");
+  const ubahKategori = (kategori) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setSelectedCategory(kategori);
+  };
 
   const kategoriList = [
     "Semua",
@@ -139,7 +146,7 @@ export default function Home({
                 styles.chip,
                 selectedCategory === item && styles.chipAktif,
               ]}
-              onPress={() => setSelectedCategory(item)}
+              onPress={() => ubahKategori(item)}
             >
               <Text
                 style={[

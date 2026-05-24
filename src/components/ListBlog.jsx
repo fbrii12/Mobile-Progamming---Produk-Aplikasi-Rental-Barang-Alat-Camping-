@@ -3,6 +3,7 @@ import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../assets/theme";
 import { useNavigation } from "@react-navigation/native"; 
+import * as Animatable from 'react-native-animatable';
 
 export default function ListBlog({ data = [], onDelete, bookmarks = [], onToggleBookmark }) {
   const isBookmarked = (id) => bookmarks.some((b) => b.id === id);
@@ -11,13 +12,24 @@ export default function ListBlog({ data = [], onDelete, bookmarks = [], onToggle
   return (
     <View style={styles.container}>
       {data.length === 0 ? (
-        <View style={styles.emptyWrap}>
+        <Animatable.View 
+          animation="pulse" 
+          iterationCount="infinite" 
+          duration={2000}
+          style={styles.emptyWrap}
+        >
           <Text style={styles.emptyIcon}>📦</Text>
           <Text style={styles.empty}>Belum ada produk</Text>
-        </View>
+        </Animatable.View>
       ) : (
-        data.map((item) => (
-          // 🔥 2. UBAH VIEW MENJADI TOUCHABLE OPACITY agar kartu bisa diklik
+        data.map((item, index) => (
+          <Animatable.View 
+            key={item.id}
+            animation="fadeInUp" 
+            duration={600}      
+            delay={index * 150}  
+            useNativeDriver      
+          >
           <TouchableOpacity 
             key={item.id} 
             style={styles.card}
@@ -58,6 +70,7 @@ export default function ListBlog({ data = [], onDelete, bookmarks = [], onToggle
               </View>
             </View>
           </TouchableOpacity>
+          </Animatable.View>
         ))
       )}
     </View>
