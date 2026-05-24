@@ -1,18 +1,20 @@
 import { useState } from "react";
 import {
   View, Text, TextInput, ScrollView,
-  TouchableOpacity, StyleSheet, SafeAreaView,
+  TouchableOpacity, StyleSheet, Pressable,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../assets/theme";
 import ItemBookmark from "../components/ItemBookmark"; // sesuaikan path
+import {useNavigation} from '@react-navigation/native';
 
 const KATEGORI = ["Semua", "Tenda", "Tas & Carrier", "Masak", "Aksesoris"];
 
 export default function Discover({ dataBarang = [], onDelete }) {
   const [search, setSearch] = useState("");
   const [aktif, setAktif] = useState("Semua");
-
+const navigation = useNavigation();
   const filtered = dataBarang.filter((item) => {
     const cocokKategori = aktif === "Semua" || item.kategori === aktif;
     const cocokSearch = item.nama.toLowerCase().includes(search.toLowerCase());
@@ -39,21 +41,24 @@ export default function Discover({ dataBarang = [], onDelete }) {
         </View>
 
         {/* SEARCH */}
-        <View style={styles.searchBar}>
-          <Ionicons name="search-outline" size={16} color="#aaa" />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Cari peralatan camping..."
-            placeholderTextColor="#aaa"
-            value={search}
-            onChangeText={setSearch}
-          />
-          {search.length > 0 && (
-            <TouchableOpacity onPress={() => setSearch("")}>
-              <Ionicons name="close-circle" size={16} color="#aaa" />
-            </TouchableOpacity>
-          )}
-        </View>
+        <Pressable onPress={() => navigation.navigate("SearchPage")}>
+          <View style={styles.searchBar} pointerEvents="none">
+            <Ionicons name="search-outline" size={16} color="#aaa" />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Cari peralatan camping..."
+              placeholderTextColor="#aaa"
+              value={search}
+              onChangeText={setSearch}
+              editable={false}
+            />
+            {search.length > 0 && (
+              <TouchableOpacity onPress={() => setSearch("")}>
+                <Ionicons name="close-circle" size={16} color="#aaa" />
+              </TouchableOpacity>
+            )}
+          </View>
+        </Pressable>
       </View>
 
       {/* FILTER CHIPS */}

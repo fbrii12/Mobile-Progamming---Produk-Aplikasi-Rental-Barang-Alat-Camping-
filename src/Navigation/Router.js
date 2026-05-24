@@ -6,7 +6,12 @@ import { colors } from "../../assets/theme";
 import Home from "../screens/Home";
 import Discover from "../screens/Discover";
 import Profile from "../screens/Profile";
+import Search from "../screens/Search";
+import AddBlogForm from "../screens/AddBlogForm";
 import BlogDetail from "../screens/BlogDetail"; 
+import SplashScreen from "../screens/SplashScreen";
+import Register from "../screens/Register";
+import Login from "../screens/Login";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -55,14 +60,55 @@ function MainTabs({ barang, hapusProduk, tambahProduk, bookmarks, toggleBookmark
 // 2. STACK UTAMA (Bungkus Tabs dan layani Halaman Detail)
 export default function Router(props) {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {/* Layar utama yang isinya Tab Bar bawah */}
-      <Stack.Screen name="MainTabs">
+    <Stack.Navigator initialRouteName="SplashScreen" screenOptions={{ headerShown: false }}>
+      {/* Halaman Splash */}
+      <Stack.Screen
+        name="SplashScreen"
+        component={SplashScreen}
+        options={{ headerShown: false }}
+      />
+
+      {/* Halaman Login */}
+      <Stack.Screen
+        name="Login"
+        component={Login}
+        options={{ headerShown: false }}
+      />
+
+      {/* Halaman Register */}
+      <Stack.Screen
+        name="Register"
+        component={Register}
+        options={{ headerShown: false }}
+      />
+
+      {/* Layar utama yang isinya Tab Bar bawah (dinamai MainApp agar sinkron dengan Login) */}
+      <Stack.Screen name="MainApp">
         {(navProps) => <MainTabs {...navProps} {...props} />}
       </Stack.Screen>
       
       {/* Layar Detail Produk */}
       <Stack.Screen name="BlogDetail" component={BlogDetail} />
+
+      {/* Halaman Pencarian */}
+      <Stack.Screen
+        name="SearchPage"
+        component={Search}
+        options={{
+          headerShown: false,
+          animation: "slide_from_right",
+        }}
+      />
+
+      {/* Halaman Tulis Blog */}
+      <Stack.Screen
+        name="AddBlog"
+        component={AddBlogForm}
+        options={{
+          headerShown: false, 
+          animation: "slide_from_right",
+        }}
+      />
     </Stack.Navigator>
   );
 }

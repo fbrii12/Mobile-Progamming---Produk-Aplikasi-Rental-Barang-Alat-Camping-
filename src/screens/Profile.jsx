@@ -7,11 +7,14 @@ import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../assets/theme";
+import { Settings, Edit } from "lucide-react-native";
+import { useNavigation } from "@react-navigation/native";
+import { Pressable } from "react-native";
 
 export default function Profile() {
   const [name, setName] = useState("Febri");
   const [isEditing, setIsEditing] = useState(false);
-
+  const navigation = useNavigation();
   const menuItems = [
     { icon: "person-outline", label: "Edit Profile" },
     { icon: "settings-outline", label: "Pengaturan" },
@@ -21,7 +24,6 @@ export default function Profile() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
-
         {/* HEADER HIJAU */}
         <View style={styles.headerBg}>
           <View style={styles.avatarWrap}>
@@ -108,6 +110,20 @@ export default function Profile() {
 
         <View style={{ height: 20 }} />
       </ScrollView>
+
+      {/* Floating Button untuk ke AddBlogForm */}
+      <Pressable
+        style={({ pressed }) => [
+          styles.floatingButton,
+          {
+            opacity: pressed ? 0.8 : 1,
+            transform: [{ scale: pressed ? 0.95 : 1 }],
+          },
+        ]}
+        onPress={() => navigation.navigate("AddBlog")}
+      >
+        <Edit color={colors.white()} size={20} />
+      </Pressable>
     </SafeAreaView>
   );
 }
@@ -117,6 +133,23 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F7F6F2",
   },
+  floatingButton: {
+    backgroundColor: colors.forestGreen(),
+    padding: 15,
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    borderRadius: 10,
+    shadowColor: colors.forestGreen(),
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
+  },
+
   headerBg: {
     backgroundColor: colors.forestGreen(),
     paddingTop: 36,

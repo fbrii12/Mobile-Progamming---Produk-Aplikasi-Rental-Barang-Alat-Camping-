@@ -8,6 +8,7 @@ const colors = {
     sand: (opacity = 1) => `rgba(244, 230, 200, ${opacity})`,        // warna pasir
     skyBlue: (opacity = 1) => `rgba(135, 206, 235, ${opacity})`,     // langit
     sunsetOrange: (opacity = 1) => `rgba(255, 140, 0, ${opacity})`,  // senja
+    blue: (opacity = 1) => `rgba(30, 144, 255, ${opacity})`,         // biru dodger / warna tombol
 
     // Netral
     white: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
