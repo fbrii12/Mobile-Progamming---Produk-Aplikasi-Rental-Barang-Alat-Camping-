@@ -12,6 +12,8 @@ import BlogDetail from "../screens/BlogDetail";
 import SplashScreen from "../screens/SplashScreen";
 import Register from "../screens/Register";
 import Login from "../screens/Login";
+import EditBlogForm from "../screens/EditBlogForm";
+
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -109,6 +111,15 @@ export default function Router(props) {
           animation: "slide_from_right",
         }}
       />
+      <Stack.Screen
+        name="EditBlog"
+        component={EditBlogForm}
+        options={{
+          headerShown: false,
+          animation: "slide_from_right",
+        }}
+      />
+
     </Stack.Navigator>
   );
 }

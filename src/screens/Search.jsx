@@ -24,7 +24,7 @@ export default Search;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white(),
+    backgroundColor: "#F7F6F2",
   },
   header: {
     paddingHorizontal: 24,
@@ -36,6 +36,6 @@ const styles = StyleSheet.create({
     zIndex: 1000,
     right: 0,
     left: 0,
-    backgroundColor: colors.white(),
+    backgroundColor: "#F7F6F2",
   },
 });
