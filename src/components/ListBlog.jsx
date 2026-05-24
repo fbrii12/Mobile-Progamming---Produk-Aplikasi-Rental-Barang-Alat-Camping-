@@ -1,11 +1,11 @@
-import { ScrollView, View, StyleSheet, Text,ImageBackground,Image,} from "react-native";
+import { ScrollView, View, StyleSheet, Text, ImageBackground, Image, TouchableOpacity } from "react-native";
 import { colors } from "../../assets/theme";
-import { ReceiptText, Clock, MessageCircle,Bookmark } from "lucide-react-native";
+import { ReceiptText, Bookmark } from "lucide-react-native";
 
-export default function ListBlog({ styles }) {
+export default function ListBlog({ styles, data, onDelete }) { // ✅ tambah onDelete
   return (
     <ScrollView>
-      <View style={styles.ListBlog}>
+      <View style={styles.listBlog}>
 
         {/* HORIZONTAL (Highlight Barang) */}
         <ScrollView
@@ -13,222 +13,80 @@ export default function ListBlog({ styles }) {
           horizontal
           contentContainerStyle={{ gap: 15 }}
         >
-          <View style={{ ...itemHorizontal.cardItem, marginLeft: 24 }}>
-            <ImageBackground
-              style={itemHorizontal.cardImage}
-              resizeMode="cover"
-              imageStyle={{ borderRadius: 15 }}
-              source={{
-                uri: "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4",
-              }}
+          {data.slice(0, 3).map((item, index) => (
+            <View
+              key={item.id}
+              style={{ ...itemHorizontal.cardItem, marginLeft: index === 0 ? 24 : 0 }}
             >
-              <View style={itemHorizontal.cardContent}>
-                <View style={itemHorizontal.cardInfo}>
-                  <Text style={itemHorizontal.cardTitle}>
-                    Tenda 4 Orang
-                  </Text>
-                  <Text style={itemHorizontal.cardText}>
-                    Rp 50.000 / hari
-                  </Text>
+              <ImageBackground
+                style={itemHorizontal.cardImage}
+                resizeMode="cover"
+                imageStyle={{ borderRadius: 15 }}
+                source={{ uri: item.image }}
+              >
+                <View style={itemHorizontal.cardContent}>
+                  <View style={itemHorizontal.cardInfo}>
+                    <Text style={itemHorizontal.cardTitle}>
+                      {item.nama}
+                    </Text>
+                    <Text style={itemHorizontal.cardText}>
+                      {item.harga}
+                    </Text>
+                  </View>
+                  <View style={itemHorizontal.cardIcon}>
+                    <Bookmark color={colors.white()} size={20} />
+                  </View>
                 </View>
-                <View style={itemHorizontal.cardIcon}>
-                  <Bookmark color={colors.white()} size={20} />
-                </View>
-              </View>
-            </ImageBackground>
-          </View>
-
-          <View style={itemHorizontal.cardItem}>
-            <ImageBackground
-              style={itemHorizontal.cardImage}
-              imageStyle={{ borderRadius: 15 }}
-              source={{
-                uri: "https://images.unsplash.com/photo-1522163182402-834f871fd851",
-              }}
-            >
-              <View style={itemHorizontal.cardContent}>
-                <View style={itemHorizontal.cardInfo}>
-                  <Text style={itemHorizontal.cardTitle}>
-                    Sleeping Bag
-                  </Text>
-                  <Text style={itemHorizontal.cardText}>
-                    Rp 20.000 / hari
-                  </Text>
-                </View>
-                <View style={itemHorizontal.cardIcon}>
-                  <Bookmark color={colors.white()} size={20} />
-                </View>
-              </View>
-            </ImageBackground>
-          </View>
-
-          <View style={itemHorizontal.cardItem}>
-            <ImageBackground
-              style={itemHorizontal.cardImage}
-              imageStyle={{ borderRadius: 15 }}
-              source={{
-                uri: "https://images.unsplash.com/photo-1508873699372-7aeab60b44ab",
-              }}
-            >
-              <View style={itemHorizontal.cardContent}>
-                <View style={itemHorizontal.cardInfo}>
-                  <Text style={itemHorizontal.cardTitle}>
-                    Kompor Portable
-                  </Text>
-                  <Text style={itemHorizontal.cardText}>
-                    Rp 25.000 / hari
-                  </Text>
-                </View>
-                <View style={itemHorizontal.cardIcon}>
-                  <Bookmark color={colors.white()} size={20} />
-                </View>
-              </View>
-            </ImageBackground>
-          </View>
+              </ImageBackground>
+            </View>
+          ))}
         </ScrollView>
 
-        {/* VERTICAL (List Barang) */}
+        {/* VERTICAL (List Barang DINAMIS) */}
         <View style={itemVertical.listCard}>
 
-          {/* ITEM 1 */}
-          <View style={itemVertical.cardItem}>
-            <Image
-              style={itemVertical.cardImage}
-              source={{
-                uri: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
-              }}
-            />
-            <View style={itemVertical.cardContent}>
-              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                <View style={{ gap: 5, width: "70%" }}>
-                  <Text style={itemVertical.cardCategory}>Tenda</Text>
-                  <Text style={itemVertical.cardTitle}>
-                    Tenda Dome 2 Orang
-                  </Text>
-                </View>
-                <ReceiptText color={colors.grey(0.6)} size={20} />
-              </View>
-              <View style={itemVertical.cardInfo}>
-                <Text style={itemVertical.cardText}>
-                  Rp 40.000 / hari
-                </Text>
-              </View>
-            </View>
-          </View>
+          {data.map((item) => (
+            <View key={item.id} style={itemVertical.cardItem}>
+              <Image
+                style={itemVertical.cardImage}
+                source={{ uri: item.image }}
+              />
 
-          {/* ITEM 2 */}
-          <View style={itemVertical.cardItem}>
-            <Image
-              style={itemVertical.cardImage}
-              source={{
-                uri: "https://images.unsplash.com/photo-1519681393784-d120267933ba",
-              }}
-            />
-            <View style={itemVertical.cardContent}>
-              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                <View style={{ gap: 5, width: "70%" }}>
-                  <Text style={itemVertical.cardCategory}>Tas</Text>
-                  <Text style={itemVertical.cardTitle}>
-                    Carrier 60L
-                  </Text>
-                </View>
-                <ReceiptText color={colors.grey(0.6)} size={20} />
-              </View>
-              <View style={itemVertical.cardInfo}>
-                <Text style={itemVertical.cardText}>
-                  Rp 40.000 / hari
-                </Text>
-              </View>
-            </View>
-          </View>
+              <View style={itemVertical.cardContent}>
+                <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                  <View style={{ gap: 5, width: "70%" }}>
+                    <Text style={itemVertical.cardCategory}>
+                      {item.kategori}
+                    </Text>
+                    <Text style={itemVertical.cardTitle}>
+                      {item.nama}
+                    </Text>
+                  </View>
 
-          {/* ITEM 3 */}
-          <View style={itemVertical.cardItem}>
-            <Image
-              style={itemVertical.cardImage}
-              source={{
-                uri: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429",
-              }}
-            />
-            <View style={itemVertical.cardContent}>
-              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                <View style={{ gap: 5, width: "70%" }}>
-                  <Text style={itemVertical.cardCategory}>Penerangan</Text>
-                  <Text style={itemVertical.cardTitle}>
-                    Headlamp Outdoor
-                  </Text>
+                  <ReceiptText color={colors.olive(0.6)} size={20} />
                 </View>
-                <ReceiptText color={colors.grey(0.6)} size={20} />
-              </View>
-              <View style={itemVertical.cardInfo}>
-                <Text style={itemVertical.cardText}>
-                  Rp 10.000 / hari
-                </Text>
+
+                <View style={itemVertical.cardInfo}>
+                  <Text style={itemVertical.cardText}>
+                    {item.harga}
+                  </Text>
+
+                  {/* 🔥 TOMBOL HAPUS */}
+                  <TouchableOpacity onPress={() => onDelete(item.id)}>
+                    <Text style={{ color: "red", fontSize: 12 }}>
+                      Hapus
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
-          </View>
+          ))}
 
         </View>
       </View>
     </ScrollView>
   );
 }
-
-const itemVertical = StyleSheet.create({
-  listCard: {
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-    gap: 15,
-  },
-
-  cardItem: {
-    backgroundColor: colors.white(),
-    flexDirection: "row",
-    borderRadius: 12,
-    shadowColor: colors.earthBrown(0.3),
-    elevation: 3,
-  },
-
-  cardCategory: {
-    color: colors.forestGreen(),
-    fontSize: 10,
-    fontFamily: "Pjs-SemiBold",
-  },
-
-  cardTitle: {
-    fontSize: 14,
-    fontFamily: "Pjs-Bold",
-    color: colors.earthBrown(),
-  },
-
-  cardText: {
-    fontSize: 11,
-    fontFamily: "Pjs-Medium",
-    color: colors.olive(),
-  },
-
-  cardImage: {
-    width: 94,
-    height: 94,
-    borderRadius: 12,
-    resizeMode: "cover",
-  },
-
-  cardInfo: {
-    flexDirection: "row",
-    gap: 5,
-    alignItems: "center",
-  },
-
-  cardContent: {
-    gap: 10,
-    justifyContent: "space-between",
-    paddingRight: 10,
-    paddingLeft: 15,
-    flex: 1,
-    paddingVertical: 10,
-  },
-});
 
 const itemHorizontal = StyleSheet.create({
   cardItem: {
@@ -245,7 +103,7 @@ const itemHorizontal = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     padding: 15,
-    backgroundColor: "rgba(0,0,0,0.2)", // overlay biar teks kebaca
+    backgroundColor: "rgba(0,0,0,0.2)",
     borderRadius: 15,
   },
 
@@ -272,5 +130,53 @@ const itemHorizontal = StyleSheet.create({
     backgroundColor: colors.forestGreen(0.7),
     padding: 6,
     borderRadius: 8,
+  },
+});
+
+const itemVertical = StyleSheet.create({
+  listCard: {
+    paddingHorizontal: 24,
+    paddingTop: 10,
+  },
+
+  cardItem: {
+    flexDirection: "row",
+    marginBottom: 15,
+    gap: 10,
+  },
+
+  cardImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+  },
+
+  cardContent: {
+    flex: 1,
+    justifyContent: "space-between",
+  },
+
+  cardCategory: {
+    fontSize: 12,
+    color: colors.grey(),
+    fontFamily: "Pjs-Regular",
+  },
+
+  cardTitle: {
+    fontFamily: "Pjs-Bold",
+    fontSize: 14,
+    color: colors.black(),
+  },
+
+  cardText: {
+    fontSize: 12,
+    color: colors.grey(),
+    fontFamily: "Pjs-Regular",
+  },
+
+  cardInfo: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
 });
