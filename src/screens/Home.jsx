@@ -19,6 +19,7 @@ export default function Home({
   bookmarks = [],
   onToggleBookmark,
   onOpenBookmark,
+  navigation
 }) {
   const [selectedCategory, setSelectedCategory] = useState("Semua");
 
@@ -94,7 +95,7 @@ export default function Home({
               {"Sewa 3 hari\ngratis 1 hari"}
             </Text>
             <TouchableOpacity style={styles.bannerBtn}>
-              <Text style={styles.bannerBtnText}>Lihat promo</Text>
+              <Text style={styles.bannerBtnText}onPress={() => navigation.navigate("Discover")}>Lihat promo</Text>
             </TouchableOpacity>
           </View>
           <Text style={{ fontSize: 60 }}>⛺</Text>

@@ -2,10 +2,11 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../assets/theme";
+import { useNavigation } from "@react-navigation/native"; 
 
-// 🔥 Perhatikan baris ini, pastikan menerima bookmarks dan onToggleBookmark
 export default function ListBlog({ data = [], onDelete, bookmarks = [], onToggleBookmark }) {
   const isBookmarked = (id) => bookmarks.some((b) => b.id === id);
+  const navigation = useNavigation();
 
   return (
     <View style={styles.container}>
@@ -16,7 +17,13 @@ export default function ListBlog({ data = [], onDelete, bookmarks = [], onToggle
         </View>
       ) : (
         data.map((item) => (
-          <View key={item.id} style={styles.card}>
+          // 🔥 2. UBAH VIEW MENJADI TOUCHABLE OPACITY agar kartu bisa diklik
+          <TouchableOpacity 
+            key={item.id} 
+            style={styles.card}
+            activeOpacity={0.9} // Efek redup sedikit saat ditekan
+            onPress={() => navigation.navigate("BlogDetail", { item: item })} // Pindah ke layar detail
+          >
             <View style={styles.imgWrap}>
               <Image source={{ uri: item.image }} style={styles.image} contentFit="cover" transition={300} />
               <View style={styles.overlay}>
@@ -50,7 +57,7 @@ export default function ListBlog({ data = [], onDelete, bookmarks = [], onToggle
                 </View>
               </View>
             </View>
-          </View>
+          </TouchableOpacity>
         ))
       )}
     </View>
