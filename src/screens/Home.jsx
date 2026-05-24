@@ -45,18 +45,7 @@ export default function Home({
       : dataBarang.filter((item) => item.kategori === selectedCategory);
 
   const totalKategori = [...new Set(dataBarang.map((i) => i.kategori))].length;
-  const handleToggleBookmark = (barang) => {
-    // Cek apakah barang sudah ada di bookmark
-    const isBookmarked = bookmarks.find((item) => item.id === barang.id);
 
-    if (isBookmarked) {
-      // Kalau sudah ada, hapus dari bookmark
-      setBookmarks(bookmarks.filter((item) => item.id !== barang.id));
-    } else {
-      // Kalau belum ada, tambahkan ke bookmark
-      setBookmarks([...bookmarks, barang]);
-    }
-  };
 
   return (
     <SafeAreaView style={styles.container}>

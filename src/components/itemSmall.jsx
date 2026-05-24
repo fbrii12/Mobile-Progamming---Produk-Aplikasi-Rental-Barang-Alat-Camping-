@@ -37,12 +37,12 @@ const ItemSmall = ({ item }) => {
             </Text>
             <Text style={styles.cardTitle}>{item.title}</Text>
           </View>
-          <ReceiptText color={colors.grey(0.6)} variant="Linear" size={20} />
+          <ReceiptText color={colors.grey(0.6)} size={20} />
         </View>
         <View style={styles.cardInfo}>
-          <Clock size={10} variant="Linear" color={colors.grey(0.6)} />
+          <Clock size={10} color={colors.grey(0.6)} />
           <Text style={styles.cardText}>{formatDate(item?.createdAt)}</Text>
-          <MessageCircle size={10} variant="Linear" color={colors.grey(0.6)} />
+          <MessageCircle size={10} color={colors.grey(0.6)} />
           <Text style={styles.cardText}>{item.totalComments}</Text>
         </View>
       </View>

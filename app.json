@@ -27,6 +27,8 @@
     },
     "plugins": [
       "expo-font",
+      "expo-router",
+      "expo-image-picker",
       "@react-native-community/datetimepicker"
     ]
   }

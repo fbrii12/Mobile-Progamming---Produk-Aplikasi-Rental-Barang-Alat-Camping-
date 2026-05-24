@@ -9,10 +9,13 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { ArrowLeft } from "lucide-react-native";
+import { Image } from "expo-image";
+import { ArrowLeft, Plus, SquarePlus } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
 import { colors } from "../../assets/theme";
-import axios from "axios";
+import { supabase } from "../libs/supabase";
+import * as ImagePicker from "expo-image-picker";
+import * as ImageManipulator from "expo-image-manipulator";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const EditBlogForm = ({ route }) => {
@@ -24,14 +27,16 @@ const EditBlogForm = ({ route }) => {
     { id: 4, name: "Penerangan" },
     { id: 5, name: "Aksesoris" },
   ];
+
   const [blogData, setBlogData] = useState({
     title: "",
     content: "",
-    image:"",
     category: {},
     totalLikes: 0,
     totalComments: 0,
   });
+  const [image, setImage] = useState(null);
+  const [oldImage, setOldImage] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
 
@@ -45,26 +50,31 @@ const EditBlogForm = ({ route }) => {
   useEffect(() => {
     const fetchBlog = async () => {
       try {
-        await axios
-        .get(`https://6a12d93978d0434e0d5d8969.mockapi.io/blog/${blogId}`)
-        .then((response)=>{
-            const data = response.data;
-            if (data) {
-                setBlogData({
-                    title: data.title,
-                    content: data.content,
-                    image: data.image,
-                    category: data.category,
-                    totalLikes: data.totalLikes || 0,
-                    totalComments: data.totalComments || 0,
-                });
-            }
-        })
-        .catch(function (error) {
-          console.log(error);
-        });
+        const { data, error } = await supabase
+          .from("blogs")
+          .select("*")
+          .eq("id", blogId)
+          .single();
+
+        if (error) throw error;
+
+        if (data) {
+          const findCategory = dataCategory.find(
+            (cat) => cat.name === data.category,
+          );
+          setBlogData({
+            title: data.title,
+            content: data.content,
+            category: findCategory || { id: 0, name: data.category },
+            totalLikes: data.totalLikes || 0,
+            totalComments: data.totalComments || 0,
+          });
+          setOldImage(data.image);
+          setImage(data.image);
+        }
       } catch (error) {
         console.error("Error fetching blog:", error);
+        Alert.alert("Error", "Failed to fetch blog data");
       } finally {
         setLoading(false);
       }
@@ -73,30 +83,91 @@ const EditBlogForm = ({ route }) => {
     fetchBlog();
   }, [blogId]);
 
+  const handleImagePick = async () => {
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permissionResult.granted) {
+      Alert.alert(
+        "Permission required",
+        "Permission to access the gallery is required.",
+      );
+      return;
+    }
+
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaType.Images,
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      const manipulatedResult = await ImageManipulator.manipulateAsync(
+        result.assets[0].uri,
+        [{ resize: { width: 1920 } }],
+        { compress: 1, format: ImageManipulator.SaveFormat.JPEG },
+      );
+      setImage(manipulatedResult.uri);
+    }
+  };
+
   const handleUpdate = async () => {
+    if (
+      !blogData.title ||
+      !blogData.content ||
+      !blogData.category.name ||
+      !image
+    ) {
+      Alert.alert("Error", "Please fill all fields and select an image.");
+      return;
+    }
+
     setLoading(true);
     try {
-      await axios
-      .put(`https://6a12d93978d0434e0d5d8969.mockapi.io/blog/${blogId}`, {
-        title: blogData.title,
-        content: blogData.content,
-        image: blogData.image,
-        category: blogData.category,
-        totalLikes: blogData.totalLikes,
-        totalComments: blogData.totalComments,
-      })
-      .then((response) => {
-        console.log(response.data);
-      })
-      .catch(function (error) {
-        console.log(error);
-      });
+      let publicUrl = oldImage;
+
+      if (image !== oldImage) {
+        let filename = image.substring(image.lastIndexOf("/") + 1);
+        const extension = filename.split(".").pop();
+        const name = filename.split(".").slice(0, -1).join(".");
+        filename = name + Date.now() + "." + extension;
+        const response = await fetch(image);
+        const arrayBuffer = await response.arrayBuffer();
+
+        const { error: uploadError } = await supabase.storage
+          .from("woco")
+          .upload(filename, arrayBuffer, {
+            contentType: "image/jpeg",
+          });
+
+        if (uploadError) throw uploadError;
+
+        const {
+          data: { publicUrl: newUrl },
+        } = supabase.storage.from("woco").getPublicUrl(filename);
+
+        publicUrl = newUrl;
+      }
+
+      const { error } = await supabase
+        .from("blogs")
+        .update({
+          title: blogData.title,
+          category: blogData.category.name,
+          image: publicUrl,
+          content: blogData.content,
+        })
+        .eq("id", blogId);
+
+      if (error) throw error;
 
       setLoading(false);
       navigation.navigate("BlogDetail", { blogId });
     } catch (error) {
       console.error(error);
       setLoading(false);
+      Alert.alert("Error", "Failed to update blog");
     }
   };
 
@@ -104,7 +175,7 @@ const EditBlogForm = ({ route }) => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <ArrowLeft color={colors.black()} variant="Linear" size={24} />
+          <ArrowLeft color={colors.black()} size={24} />
         </TouchableOpacity>
         <View style={{ flex: 1, alignItems: "center" }}>
           <Text style={styles.title}>Edit blog</Text>
@@ -127,29 +198,17 @@ const EditBlogForm = ({ route }) => {
             style={textInput.title}
           />
         </View>
-        <View style={textInput.borderDashed}>
+        <View style={[textInput.borderDashed, { minHeight: 250 }]}>
           <TextInput
             placeholder="Content"
             value={blogData.content}
             onChangeText={(text) => handleChange("content", text)}
             placeholderTextColor={colors.grey(0.6)}
             multiline
-            style={[textInput.content, { minHeight: 180 }]}
-          />
-        </View>
-        <View style={textInput.borderDashed}>
-          <TextInput
-            placeholder="Image URL"
-            value={blogData.image}
-            onChangeText={(text) => handleChange("image", text)}
-            placeholderTextColor={colors.grey(0.6)}
             style={textInput.content}
-            selectTextOnFocus={true}
-            autoCapitalize="none"
-            autoCorrect={false}
           />
         </View>
-        <View style={textInput.categoryCard}>
+        <View style={[textInput.borderDashed]}>
           <Text
             style={{
               fontSize: 12,
@@ -163,7 +222,7 @@ const EditBlogForm = ({ route }) => {
             {dataCategory.map((item, index) => {
               const bgColor =
                 item.id === blogData.category.id
-                  ? colors.forestGreen()
+                  ? colors.black()
                   : colors.grey(0.08);
               const color =
                 item.id === blogData.category.id
@@ -185,6 +244,56 @@ const EditBlogForm = ({ route }) => {
             })}
           </View>
         </View>
+        {image ? (
+          <View style={{ position: "relative" }}>
+            <Image
+              style={{ width: "100%", height: 127, borderRadius: 5 }}
+              source={image}
+              contentFit="cover"
+            />
+            <TouchableOpacity
+              style={{
+                position: "absolute",
+                top: -5,
+                right: -5,
+                backgroundColor: colors.blue(),
+                borderRadius: 25,
+              }}
+              onPress={() => setImage(null)}
+            >
+              <Plus
+                size={20}
+                color={colors.white()}
+                style={{ transform: [{ rotate: "45deg" }] }}
+              />
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity onPress={handleImagePick}>
+            <View
+              style={[
+                textInput.borderDashed,
+                {
+                  gap: 10,
+                  paddingVertical: 30,
+                  justifyContent: "center",
+                  alignItems: "center",
+                },
+              ]}
+            >
+              <SquarePlus color={colors.grey(0.6)} size={42} />
+              <Text
+                style={{
+                  fontFamily: "Pjs-Regular",
+                  fontSize: 12,
+                  color: colors.grey(0.6),
+                }}
+              >
+                Upload Thumbnail
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
       </ScrollView>
       <View style={styles.bottomBar}>
         <TouchableOpacity style={styles.button} onPress={handleUpdate}>
@@ -193,7 +302,7 @@ const EditBlogForm = ({ route }) => {
       </View>
       {loading && (
         <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color={colors.forestGreen()} />
+          <ActivityIndicator size="large" color={colors.blue()} />
         </View>
       )}
     </SafeAreaView>
@@ -205,16 +314,16 @@ export default EditBlogForm;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F7F6F2",
+    backgroundColor: colors.white(),
   },
   header: {
     paddingHorizontal: 24,
     flexDirection: "row",
     alignItems: "center",
-    height: 56,
-    backgroundColor: "#fff",
-    borderBottomWidth: 0.5,
-    borderBottomColor: "#eee",
+    height: 52,
+    elevation: 8,
+    paddingTop: 8,
+    paddingBottom: 4,
   },
   title: {
     fontFamily: "Pjs-Bold",
@@ -230,7 +339,7 @@ const styles = StyleSheet.create({
   button: {
     paddingHorizontal: 20,
     paddingVertical: 10,
-    backgroundColor: colors.forestGreen(),
+    backgroundColor: colors.blue(),
     borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
@@ -251,39 +360,29 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 });
+
 const textInput = StyleSheet.create({
   borderDashed: {
-    borderStyle: "solid",
+    borderStyle: "dashed",
     borderWidth: 1,
-    borderRadius: 12,
-    padding: 0,
-    borderColor: "#e2e8f0",
-    backgroundColor: "#fff",
-  },
-  categoryCard: {
-    borderStyle: "solid",
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 14,
-    borderColor: "#e2e8f0",
-    backgroundColor: "#fff",
+    borderRadius: 5,
+    padding: 10,
+    borderColor: colors.grey(0.4),
   },
   title: {
     fontSize: 16,
     fontFamily: "Pjs-SemiBold",
     color: colors.black(),
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    padding: 0,
   },
   content: {
-    fontSize: 13,
+    fontSize: 12,
     fontFamily: "Pjs-Regular",
     color: colors.black(),
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    textAlignVertical: "top",
+    padding: 0,
   },
 });
+
 const category = StyleSheet.create({
   title: {
     fontSize: 12,

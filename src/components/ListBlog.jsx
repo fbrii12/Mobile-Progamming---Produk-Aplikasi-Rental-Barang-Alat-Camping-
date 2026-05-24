@@ -34,7 +34,7 @@ export default function ListBlog({ data = [], onDelete, bookmarks = [], onToggle
             key={item.id} 
             style={styles.card}
             activeOpacity={0.9} // Efek redup sedikit saat ditekan
-            onPress={() => navigation.navigate("BlogDetail", { item: item })} // Pindah ke layar detail
+            onPress={() => navigation.navigate("BlogDetail", { blogId: item.id })} // Pindah ke layar detail
           >
             <View style={styles.imgWrap}>
               <Image source={{ uri: item.image }} style={styles.image} contentFit="cover" transition={300} />

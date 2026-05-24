@@ -3,45 +3,32 @@ import {
   View,
   Text,
   TextInput,
-  Pressable,
   StyleSheet,
   ScrollView,
   ActivityIndicator,
-  TouchableOpacity
+  TouchableOpacity,
+  Alert,
 } from "react-native";
-import { ArrowLeft } from "lucide-react-native";
+import { ArrowLeft, Plus, SquarePlus } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
 import { colors } from "../../assets/theme";
-import axios from "axios";
-
+import { supabase } from "../libs/supabase";
+import { Image } from "expo-image";
+import * as ImagePicker from "expo-image-picker";
+import * as ImageManipulator from "expo-image-manipulator";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const AddBlogForm = () => {
+  const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
-  const handleUpload = async () => {
-    setLoading(true);
-    try {
-      await axios
-        .post("https://6a12d93978d0434e0d5d8969.mockapi.io/blog", {
-          title: blogData.title,
-          category: blogData.category,
-          image,
-          content: blogData.content,
-          totalComments: blogData.totalComments,
-          totalLikes: blogData.totalLikes,
-          createdAt: new Date(),
-        })
-        .then(function (response) {
-          console.log(response);
-        })
-        .catch(function (error) {
-          console.log(error);
-        });
-      setLoading(false);
-      navigation.navigate("MainApp", { screen: "Profile" });
-    } catch (e) {
-      console.log(e);
-    }
-  };
+  const [image, setImage] = useState(null);
+  const [blogData, setBlogData] = useState({
+    title: "",
+    content: "",
+    category: {},
+    totalLikes: 0,
+    totalComments: 0,
+  });
 
   const dataCategory = [
     { id: 1, name: "Tenda" },
@@ -51,17 +38,6 @@ const AddBlogForm = () => {
     { id: 5, name: "Aksesoris" },
   ];
 
-  const [blogData, setBlogData] = useState({
-    title: "",
-    content: "",
-    category: {},
-    totalLikes: 0,
-    totalComments: 0,
-  });
-
-  const [image, setImage] = useState(null);
-  const navigation = useNavigation();
-
   const handleChange = (key, value) => {
     setBlogData({
       ...blogData,
@@ -69,17 +45,110 @@ const AddBlogForm = () => {
     });
   };
 
+  const handleImagePick = async () => {
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+
+    if (!permissionResult.granted) {
+      Alert.alert(
+        "Permission required",
+        "Permission to access the camera is required.",
+      );
+      return;
+    }
+
+    let result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 1,
+    });
+
+    console.log("result", result);
+
+    if (!result.canceled) {
+      const manipulatedResult = await ImageManipulator.manipulateAsync(
+        result.assets[0].uri,
+        [{ resize: { width: 1920, height: 1080 } }],
+        { compress: 1, format: ImageManipulator.SaveFormat.JPEG },
+      );
+      setImage(manipulatedResult.uri);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (
+      !blogData.title ||
+      !blogData.content ||
+      !blogData.category.name ||
+      !image
+    ) {
+      Alert.alert("Error", "Please fill all fields and capture an image.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      let filename = image.substring(image.lastIndexOf("/") + 1);
+      const extension = filename.split(".").pop();
+      const name = filename.split(".").slice(0, -1).join(".");
+      filename = name + Date.now() + "." + extension;
+      const fileImage = await fetch(image);
+      const arrayBuffer = await fileImage.arrayBuffer();
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("woco")
+        .upload(filename, arrayBuffer, {
+          contentType: "image/jpeg",
+          upsert: true,
+        });
+
+      if (uploadError) {
+        console.error("Upload Error:", uploadError);
+        Alert.alert("Error", uploadError.message);
+        setLoading(false);
+        return;
+      }
+
+      const {
+        data: { publicUrl },
+      } = await supabase.storage.from("woco").getPublicUrl(filename);
+
+      const { data: insertData, error: insertError } = await supabase.from("blogs").insert({
+        title: blogData.title,
+        category: blogData.category.name,
+        image: publicUrl,
+        content: blogData.content,
+        totalComments: blogData.totalComments,
+        totalLikes: blogData.totalLikes,
+        createdAt: new Date(),
+      });
+
+      if (insertError) {
+        console.error("Insert Error:", insertError);
+        Alert.alert("Error", insertError.message);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(false);
+      navigation.navigate("MainApp", { screen: "Profile" });
+    } catch (error) {
+      console.log(error);
+      setLoading(false);
+      Alert.alert("Error", "Failed to upload blog.");
+    }
+  };
+
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()}>
-          <ArrowLeft color={colors.black()} variant="Linear" size={24} />
-        </Pressable>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <ArrowLeft color={colors.black()} size={24} />
+        </TouchableOpacity>
         <View style={{ flex: 1, alignItems: "center" }}>
           <Text style={styles.title}>Write blog</Text>
         </View>
       </View>
-
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: 24,
@@ -97,77 +166,106 @@ const AddBlogForm = () => {
             style={textInput.title}
           />
         </View>
-
-        <View style={textInput.borderDashed}>
+        <View style={[textInput.borderDashed, { minHeight: 250 }]}>
           <TextInput
             placeholder="Content"
             value={blogData.content}
             onChangeText={(text) => handleChange("content", text)}
             placeholderTextColor={colors.grey(0.6)}
             multiline
-            style={[textInput.content, { minHeight: 180 }]}
-          />
-        </View>
-
-        <View style={textInput.borderDashed}>
-          <TextInput
-            placeholder="Image URL"
-            value={image}
-            onChangeText={(text) => setImage(text)}
-            placeholderTextColor={colors.grey(0.6)}
             style={textInput.content}
-            selectTextOnFocus={true}
-            autoCapitalize="none"
-            autoCorrect={false}
           />
         </View>
-
-        <View style={textInput.categoryCard}>
+        <View style={[textInput.borderDashed]}>
           <Text style={category.title}>Category</Text>
           <View style={category.container}>
             {dataCategory.map((item, index) => {
               const bgColor =
                 item.id === blogData.category.id
-                  ? colors.forestGreen()
+                  ? colors.black()
                   : colors.grey(0.08);
               const color =
                 item.id === blogData.category.id
                   ? colors.white()
                   : colors.grey();
-
               return (
-                <Pressable
+                <TouchableOpacity
                   key={index}
                   onPress={() =>
                     handleChange("category", { id: item.id, name: item.name })
                   }
-                  style={({ pressed }) => [
-                    category.item,
-                    { backgroundColor: bgColor, opacity: pressed ? 0.7 : 1 },
-                  ]}
+                  style={[category.item, { backgroundColor: bgColor }]}
                 >
                   <Text style={[category.name, { color: color }]}>
                     {item.name}
                   </Text>
-                </Pressable>
+                </TouchableOpacity>
               );
             })}
           </View>
         </View>
+        {image ? (
+          <View style={{ position: "relative" }}>
+            <Image
+              style={{ width: "100%", height: 127, borderRadius: 5 }}
+              source={image}
+              contentFit="cover"
+            />
+            <TouchableOpacity
+              style={{
+                position: "absolute",
+                top: -5,
+                right: -5,
+                backgroundColor: colors.blue(),
+                borderRadius: 25,
+              }}
+              onPress={() => setImage(null)}
+            >
+              <Plus
+                size={20}
+                color={colors.white()}
+                style={{ transform: [{ rotate: "45deg" }] }}
+              />
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity onPress={handleImagePick}>
+            <View
+              style={[
+                textInput.borderDashed,
+                {
+                  gap: 10,
+                  paddingVertical: 30,
+                  justifyContent: "center",
+                  alignItems: "center",
+                },
+              ]}
+            >
+              <SquarePlus color={colors.grey(0.6)} size={42} />
+              <Text
+                style={{
+                  fontFamily: "Pjs-Regular",
+                  fontSize: 12,
+                  color: colors.grey(0.6),
+                }}
+              >
+                Upload Thumbnail
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
       </ScrollView>
-
       <View style={styles.bottomBar}>
         <TouchableOpacity style={styles.button} onPress={handleUpload}>
           <Text style={styles.buttonLabel}>Upload</Text>
         </TouchableOpacity>
-            {loading && (
+      </View>
+      {loading && (
         <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color={colors.forestGreen()} />
+          <ActivityIndicator size="large" color={colors.blue()} />
         </View>
       )}
-
-      </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -188,7 +286,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-
   header: {
     paddingHorizontal: 24,
     flexDirection: "row",

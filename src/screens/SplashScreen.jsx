@@ -2,14 +2,49 @@ import { StyleSheet, Text, View } from "react-native";
 import { colors } from "../../assets/theme";
 import { useNavigation } from "@react-navigation/native";
 import React, { useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const SplashScreen = () => {
   const navigation = useNavigation();
   useEffect(() => {
-    setTimeout(() => {
+    checkToken();
+  }, []);
+  const checkToken = async () => {
+    try {
+      const userDataJSON = await AsyncStorage.getItem("userData");
+      if (userDataJSON) {
+        const userData = JSON.parse(userDataJSON);
+        const { token, expires } = userData;
+        
+        if (token && expires) {
+          const currentTime = new Date().getTime();
+          if (currentTime <= expires) {
+            setTimeout(() => {
+              navigation.replace("MainApp");
+            }, 1500);
+          } else {
+            setTimeout(() => {
+              navigation.replace("Login");
+            }, 1500);
+          }
+        } else {
+          setTimeout(() => {
+            navigation.replace("Login");
+          }, 1500);
+        }
+      } else {
+        setTimeout(() => {
+          navigation.replace("Login");
+        }, 1500);
+      }
+    } catch (error) {
+      console.error("Error retrieving token data:", error);
+      setTimeout(() => {
         navigation.replace("Login");
       }, 1500);
-  }, []);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.logo}>

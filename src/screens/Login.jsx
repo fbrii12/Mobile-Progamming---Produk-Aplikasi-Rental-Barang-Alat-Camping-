@@ -15,6 +15,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { colors, fontType } from "../../assets/theme";
 import { Eye, EyeOff } from "lucide-react-native";
+import { supabase } from "../libs/supabase";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -25,10 +27,32 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const handleLogin = async () => {
     setLoading(true);
-    setTimeout(()=>{
-        navigation.navigate("MainApp");
-    },1500)
+    try{
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
+      if (error) {
+        if(error.message === "Invalid login credentials"){
+          Alert.alert("Error", "Email atau Password salah");
+        }
+        return;
+      }
+      const currentTime = new Date().getTime();
+      await AsyncStorage.setItem('userData', JSON.stringify({
+        token: data.session.access_token,
+        expires: currentTime + data.session.expires_in * 1000
+      }))
+  
+      setLoading(false);
+      navigation.navigate("MainApp");
+    }catch(error){
+      console.log(error);
+      Alert.alert("Error", error.message);
+      setLoading(false);
+    }
   };
+
 
   const togglePasswordVisibility = () => {
     setPasswordVisible(!passwordVisible);
